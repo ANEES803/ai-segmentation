@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Room Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input[type="file"],
+        input[type="text"],
+        input[type="color"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="color"] {
+            height: 40px;
+            padding: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .messages .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        #image-preview-container {
+            margin-top: 20px;
+            text-align: center;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        #image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            display: none; /* Hidden until an image is loaded */
+            cursor: crosshair;
+        }
+        #click-indicator {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            display: none;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Room Image for Paint Test</h1>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <label for="id_original_image">Original Image:</label>
+            {{ form.original_image }}
+            
+            <div id="image-preview-container">
+                <img id="image-preview" src="#" alt="Image Preview">
+                <div id="click-indicator"></div>
+                <p id="preview-placeholder">Upload an image to preview and select a point.</p>
+            </div>
+
+            <label for="id_clicked_x">Clicked X Coordinate:</label>
+            {{ form.clicked_x }}
+
+            <label for="id_clicked_y">Clicked Y Coordinate:</label>
+            {{ form.clicked_y }}
+
+            <label for="id_color">Select Paint Color:</label>
+            {{ form.color }}
+
+            <button type="submit">Process Image</button>
+        </form>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('id_original_image');
+        const imagePreview = document.getElementById('image-preview');
+        const previewPlaceholder = document.getElementById('preview-placeholder');
+        const clickedXInput = document.getElementById('id_clicked_x');
+        const clickedYInput = document.getElementById('id_clicked_y');
+        const clickIndicator = document.getElementById('click-indicator');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    previewPlaceholder.style.display = 'none';
+                    // Reset click indicator and coordinates
+                    clickIndicator.style.display = 'none';
+                    clickedXInput.value = '';
+                    clickedYInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+                clickIndicator.style.display = 'none';
+            }
+        });
+
+        imagePreview.addEventListener('click', function(event) {
+            const rect = imagePreview.getBoundingClientRect();
+            const scaleX = imagePreview.naturalWidth / rect.width;
+            const scaleY = imagePreview.naturalHeight / rect.height;
+
+            // Calculate coordinates relative to the original image size
+            const x = Math.round((event.clientX - rect.left) * scaleX);
+            const y = Math.round((event.clientY - rect.top) * scaleY);
+
+            clickedXInput.value = x;
+            clickedYInput.value = y;
+
+            // Position the click indicator
+            clickIndicator.style.left = (event.clientX - rect.left) + 'px';
+            clickIndicator.style.top = (event.clientY - rect.top) + 'px';
+            clickIndicator.style.display = 'block';
+        });
+
+        // Set default color if not already set by Django form
+        if (!document.getElementById('id_color').value) {
+            document.getElementById('id_color').value = '#ff0000'; // Default to red
+        }
+
+    </script>
+</body>
+</html>
+
+

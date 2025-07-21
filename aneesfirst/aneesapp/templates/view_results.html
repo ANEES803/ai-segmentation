@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Test Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .image-comparison {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .image-container {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+        .image-container h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .no-image {
+            background-color: #f8f9fa;
+            border: 1px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            border-radius: 4px;
+        }
+        .test-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .test-details h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .detail-item {
+            margin-bottom: 10px;
+        }
+        .detail-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .color-swatch {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .messages .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .image-comparison {
+                flex-direction: column;
+            }
+            .image-container {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paint Test Results</h1>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="test-details">
+            <h3>Test Details</h3>
+            <div class="detail-item">
+                <span class="detail-label">Test ID:</span>
+                {{ test.pk }}
+            </div>
+            {% if test.clicked_x and test.clicked_y %}
+            <div class="detail-item">
+                <span class="detail-label">Click Point:</span>
+                ({{ test.clicked_x }}, {{ test.clicked_y }})
+            </div>
+            {% endif %}
+            {% if test.color %}
+            <div class="detail-item">
+                <span class="detail-label">Selected Color:</span>
+                {{ test.color }}
+                <span class="color-swatch" style="background-color: {{ test.color }};"></span>
+            </div>
+            {% endif %}
+            {% if test.created_at %}
+            <div class="detail-item">
+                <span class="detail-label">Created:</span>
+                {{ test.created_at|date:"M d, Y H:i" }}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if has_result %}
+            <div class="image-comparison">
+                <div class="image-container">
+                    <h3>Original Image</h3>
+                    {% if original_url %}
+                        <img src="{{ original_url }}" alt="Original Room Image" loading="lazy">
+                    {% else %}
+                        <div class="no-image">
+                            <p>Original image not available</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="image-container">
+                    <h3>Painted Result</h3>
+                    {% if result_url %}
+                        <img src="{{ result_url }}" alt="Painted Room Image" loading="lazy">
+                    {% else %}
+                        <div class="no-image">
+                            <p>Processed image not available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Processing your image... This may take a few moments.</p>
+                <p>If this page doesn't update automatically, please refresh in a few seconds.</p>
+            </div>
+            
+            <script>
+                // Auto-refresh the page every 5 seconds if no result is available
+                setTimeout(function() {
+                    location.reload();
+                }, 5000);
+            </script>
+        {% endif %}
+
+        <div class="actions">
+            <a href="{% url 'upload_image' %}" class="btn btn-primary">Upload Another Image</a>
+            {% if has_result and result_url %}
+                <a href="{{ result_url }}" download="painted_room_{{ test.pk }}.jpg" class="btn btn-secondary">Download Result</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Add error handling for images that fail to load
+        document.querySelectorAll('img').forEach(function(img) {
+            img.addEventListener('error', function() {
+                const container = this.parentElement;
+                const noImageDiv = document.createElement('div');
+                noImageDiv.className = 'no-image';
+                noImageDiv.innerHTML = '<p>Image failed to load</p>';
+                container.replaceChild(noImageDiv, this);
+            });
+        });
+
+        // Add loading states for images
+        document.querySelectorAll('img').forEach(function(img) {
+            img.addEventListener('load', function() {
+                this.style.opacity = '1';
+            });
+            img.style.opacity = '0.5';
+            img.style.transition = 'opacity 0.3s ease';
+        });
+    </script>
+</body>
+</html>
+

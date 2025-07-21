@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+/media/
+*.log
+.vscode/
+.DS_Store
+Thumbs.db
+.env
+*.pt
+*.pth
+*.ckpt
+*.tar
+*.zip
+node_modules/
+models/
+staticfiles/
